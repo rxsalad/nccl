@@ -1,0 +1,131 @@
+### 16 GB 标准（共识后）逐操作基准 + 算法证据（2026-10-17, pod 8-gpu-8-fabric-pod-0）
+# 统一条件: 16 GB 级(十进制) x 5 次迭代, 默认算法; reduce/all_reduce 首轮被并发任务污染(比值 2.000/1.293)已重跑, 下为干净数据
+
+########## reduce ##########
+=== reduce（归约到一卡） ===
+[语义] PASS: dst=0 得到 Σ_r 输入_r = [36,72,108,144]
+[规模] 每 rank 输入 16 GB, 归约到 dst=0; 迭代 5 次
+[耗时] 每次 23.332 ms | algbw 686 GB/s | busbw(环形口径) 600 GB/s
+[流量] NVLink 实测: 每 GPU 平均 14.0017 GB/次 (min 0.0010 / max 16.0020)
+[对账] 环形模型 14.0000 GB/次/GPU -> 实测/模型 = 1.000
+
+########## all_reduce ##########
+=== all_reduce（全归约） ===
+[语义] PASS: 每个 rank 均得到 [36,72,108,144]
+[规模] 每 rank 输入 16 GB; 迭代 5 次
+[耗时] 每次 33.265 ms | algbw 481 GB/s | busbw(环形口径) 842 GB/s
+[流量] NVLink 实测: 每 GPU 平均 18.0064 GB/次 (min 18.0047 / max 18.0066)
+[对账] 环形模型 28.0000 GB/次/GPU -> 实测/模型 = 0.643
+
+########## all_gather ##########
+=== all_gather（全收集） ===
+[语义] PASS: 每 rank 拼出 [1,1,1,1,2,2,2,2,...,8,8,8,8]
+[规模] 每 rank 输入块 2 GB, 输出 16 GB; 迭代 5 次
+[耗时] 每次 25.708 ms | algbw 622 GB/s | busbw(环形口径) 545 GB/s
+[流量] NVLink 实测: 每 GPU 平均 14.0009 GB/次 (min 14.0009 / max 14.0009)
+[对账] 环形模型 14.0000 GB/次/GPU -> 实测/模型 = 1.000
+
+########## reduce_scatter ##########
+=== reduce_scatter（归约散射） ===
+[语义] PASS: rank r 得到自己段的和 8x(r+1)
+[规模] 每 rank 输入 16 GB, 输出 2 GB; 迭代 5 次
+[耗时] 每次 20.234 ms | algbw 791 GB/s | busbw(环形口径) 692 GB/s
+[流量] NVLink 实测: 每 GPU 平均 14.0009 GB/次 (min 14.0009 / max 14.0009)
+[对账] 环形模型 14.0000 GB/次/GPU -> 实测/模型 = 1.000
+
+########## all_to_all ##########
+=== all_to_all（全交换） ===
+[语义] PASS: 转置语义: out 第 j 段 = rank j 的第 r 段
+[规模] 每 rank 16 GB 等分发给 8 卡; 迭代 5 次
+[耗时] 每次 20.960 ms | algbw 763 GB/s | busbw(环形口径) 668 GB/s
+[流量] NVLink 实测: 每 GPU 平均 14.0017 GB/次 (min 14.0017 / max 14.0017)
+[对账] 环形模型 14.0000 GB/次/GPU -> 实测/模型 = 1.000
+
+########## rs_ag ##########
+=== reduce_scatter + all_gather（= all_reduce） ===
+[语义] PASS: RS+AG 后每 rank 拼回全部段的和(= all_reduce 语义)
+[规模] 输入 16 GB -> RS 出 2 GB -> AG 拼回 16 GB; 迭代 5 次
+[耗时] 每次 45.949 ms | algbw 348 GB/s | busbw(环形口径) 609 GB/s
+[流量] NVLink 实测: 每 GPU 平均 28.0017 GB/次 (min 28.0017 / max 28.0017)
+[对账] 环形模型 28.0000 GB/次/GPU -> 实测/模型 = 1.000
+
+### 算法证据（NCCL_DEBUG_FILE 逐进程, 每操作独立运行）
+# Trees 图: 6 个操作完全相同——通信器级线性链 0-1-2-...-7, 每 rank 32 通道唯一树(同构); 树图是"可用结构"而非"使用证明"
+#   rank r: up=r+1, down=r-1; rank 7 up=-1, rank 0 down=-1
+# NVLS: 仅 all_reduce 出现 "NVLS comm ... headRank 0 nHeads 8 nvlsRanks 8" 行(NVLS 资源为其建立);
+#       其余操作只有 "NVLS multicast support is available"(能力行, 非使用)
+# 判定: all_reduce=NVLS(0.643 + 均匀 + NVLS comm); reduce=链(min~0/max=S, 镜像 broadcast);
+#       all_gather/reduce_scatter/rs_ag=Ring(精确 1.000 + 均匀分布排除 Tree/链);
+#       all_to_all=P2P 直达(精确 1.000 + 均匀)
+# 补充: 首轮 reduce/all_reduce 与并发 debug 任务重叠 -> 比值 2.000/1.293, 作废重跑(见上干净数据)
+##### reduce
+ch=1 [耗时] 每次 457.632 ms | algbw 35 GB/s | busbw(环形口径) 31 GB/s
+ch=2 [耗时] 每次 229.699 ms | algbw 70 GB/s | busbw(环形口径) 61 GB/s
+ch=4 [耗时] 每次 115.630 ms | algbw 138 GB/s | busbw(环形口径) 121 GB/s
+ch=8 [耗时] 每次 58.014 ms | algbw 276 GB/s | busbw(环形口径) 241 GB/s
+ch=16 [耗时] 每次 30.181 ms | algbw 530 GB/s | busbw(环形口径) 464 GB/s
+ch=32 [耗时] 每次 23.354 ms | algbw 685 GB/s | busbw(环形口径) 599 GB/s
+##### all_reduce
+ch=1 [耗时] 每次 33.281 ms | algbw 481 GB/s | busbw(环形口径) 841 GB/s
+ch=2 [耗时] 每次 33.348 ms | algbw 480 GB/s | busbw(环形口径) 840 GB/s
+ch=4 [耗时] 每次 33.241 ms | algbw 481 GB/s | busbw(环形口径) 842 GB/s
+ch=8 [耗时] 每次 33.268 ms | algbw 481 GB/s | busbw(环形口径) 842 GB/s
+ch=16 [耗时] 每次 33.366 ms | algbw 480 GB/s | busbw(环形口径) 839 GB/s
+ch=32 [耗时] 每次 33.311 ms | algbw 480 GB/s | busbw(环形口径) 841 GB/s
+##### all_gather
+ch=1 [耗时] 每次 573.930 ms | algbw 28 GB/s | busbw(环形口径) 24 GB/s
+ch=2 [耗时] 每次 289.604 ms | algbw 55 GB/s | busbw(环形口径) 48 GB/s
+ch=4 [耗时] 每次 147.536 ms | algbw 108 GB/s | busbw(环形口径) 95 GB/s
+ch=8 [耗时] 每次 76.706 ms | algbw 209 GB/s | busbw(环形口径) 183 GB/s
+ch=16 [耗时] 每次 41.578 ms | algbw 385 GB/s | busbw(环形口径) 337 GB/s
+ch=32 [耗时] 每次 25.707 ms | algbw 622 GB/s | busbw(环形口径) 545 GB/s
+##### reduce_scatter
+ch=1 [耗时] 每次 430.960 ms | algbw 37 GB/s | busbw(环形口径) 32 GB/s
+ch=2 [耗时] 每次 215.788 ms | algbw 74 GB/s | busbw(环形口径) 65 GB/s
+ch=4 [耗时] 每次 108.143 ms | algbw 148 GB/s | busbw(环形口径) 129 GB/s
+ch=8 [耗时] 每次 54.262 ms | algbw 295 GB/s | busbw(环形口径) 258 GB/s
+ch=16 [耗时] 每次 28.082 ms | algbw 570 GB/s | busbw(环形口径) 499 GB/s
+ch=32 [耗时] 每次 20.206 ms | algbw 792 GB/s | busbw(环形口径) 693 GB/s
+##### all_to_all
+ch=1 [耗时] 每次 622.153 ms | algbw 26 GB/s | busbw(环形口径) 23 GB/s
+ch=2 [耗时] 每次 310.473 ms | algbw 52 GB/s | busbw(环形口径) 45 GB/s
+ch=4 [耗时] 每次 154.299 ms | algbw 104 GB/s | busbw(环形口径) 91 GB/s
+ch=8 [耗时] 每次 76.955 ms | algbw 208 GB/s | busbw(环形口径) 182 GB/s
+ch=16 [耗时] 每次 38.535 ms | algbw 415 GB/s | busbw(环形口径) 363 GB/s
+ch=32 [耗时] 每次 20.947 ms | algbw 764 GB/s | busbw(环形口径) 668 GB/s
+##### rs_ag
+ch=1 [耗时] 每次 1004.916 ms | algbw 16 GB/s | busbw(环形口径) 28 GB/s
+ch=2 [耗时] 每次 505.401 ms | algbw 32 GB/s | busbw(环形口径) 55 GB/s
+ch=4 [耗时] 每次 255.883 ms | algbw 63 GB/s | busbw(环形口径) 109 GB/s
+ch=8 [耗时] 每次 130.952 ms | algbw 122 GB/s | busbw(环形口径) 214 GB/s
+ch=16 [耗时] 每次 69.712 ms | algbw 230 GB/s | busbw(环形口径) 402 GB/s
+ch=32 [耗时] 每次 45.888 ms | algbw 349 GB/s | busbw(环形口径) 610 GB/s
+SCAN-DONE
+
+### 环通道同序核验（all_gather, NCCL_DEBUG_FILE 逐进程, 2026-10-17）
+# 32 条通道全部 "Channel xx/32 : 0 1 2 3 4 5 6 7"（uniq -c 计数 = 每通道一行、序完全相同）
+# 结论: 32 个环并行且同序, 各搬 1/32; 环序只能靠日志判定(环的字节天然均匀, 分布指纹失效)
+
+### all_reduce: NVLS vs 强制 Ring（16 GB x 5 次, 2026-10-17, 补测）
+# NVLS(默认): 33.317 ms | algbw 480 | busbw 840 | 18.0063 GB/卡 (S+S/8, 块级融合流水)
+# Ring 强制:  40.192 ms | algbw 398 | busbw 697 | 28.0017 GB/卡 (1.75xS, 张量级两阶段+阶段边界块间重叠)
+# 手写 rs_ag: 45.949 ms | 28.0017 GB/卡 (两调用无跨阶段重叠)
+# 结论: NVLS 快 17%/省 36%; Ring 单调用比手写 RS+AG 快 12% (AR 内部阶段边界重叠)
+
+### §7 稀疏路由扫描（每 k 独立进程首窗, 2 GB/块, 2026-10-18）
+[k=1] 每次 3.582 ms | 每卡实测 2.0002 GB (全均匀) | 模型 2 | 比值 1.000
+[k=2] 每次 7.102 ms | 每卡实测 4.0005 GB (全均匀) | 模型 4 | 比值 1.000
+[k=4] 每次 13.280 ms | 每卡实测 8.0010 GB (全均匀) | 模型 8 | 比值 1.000
+[k=7] 每次 21.122 ms | 每卡实测 14.0017 GB (全均匀) | 模型 14 | 比值 1.000
+# 结论: 字节 ∝ 目标数(有效流量), 逐点精确; k=7 与等分实测逐位一致
+# 方法学发现: 变长 a2a 同进程模式切换 -> 测量窗口携带确定性超额流量(k=1 达 1.38x,
+#   金字塔分布, warmup 不吸收, 跨 2+ 窗口); 全新进程首窗全部干净 -> 每 k 独立进程协议
+#   (dbg2/dbg3/dbg4/dbg5 隔离实验记录见会话; 机制未深挖)
+
+### §9.3 NVLS/Tree 强制矩阵（16 GB x 5 次, 2026-10-18）
+# NCCL_ALGO=NVLS: broadcast/reduce 报错不支持; all_reduce 33.312ms/18.0149GB(0.643);
+#   all_gather 35.531ms/2.0411GB(0.146); reduce_scatter 23.859ms/16.0374GB(1.146)
+# NCCL_ALGO=Tree: all_gather/reduce_scatter 报错不支持; all_reduce 49.322ms/28.0034GB(1.000,
+#   分布 min 16.0020/max 32.0039 = 树指纹)
+# 结论: Tree 家族={AR,bcast,reduce}, NVLS 家族={AR,AG,RS}, 恰好互补; 字节省 != 时间省
+#   (NVLS-AG 字节 1/7 但慢 38%); NVLS-AR = NVLS-RS + NVLS-AG (差 0.3%)

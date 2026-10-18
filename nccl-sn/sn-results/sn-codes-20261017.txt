@@ -1,0 +1,95 @@
+### 本章逐操作运行原始输出（sn-codes/*.py, torchrun --nproc_per_node=8, 2026-10-17, pod 8-gpu-8-fabric-pod-0）
+########## broadcast ##########
+=== broadcast（广播） ===
+[语义] PASS: 8 个 rank 全部得到 src=0 的 [1,2,3,4]
+[规模] src(rank0) 持有 128 MiB, 广播到 8 卡; 迭代 20 次
+[耗时] 每次 0.223 ms | algbw 602 GB/s | busbw(环形口径) 527 GB/s
+[流量] NVLink 实测: 每 GPU 平均 0.1094 GiB/次 (min 0.0000 / max 0.1250)
+[对账] 环形模型 0.1094 GiB/次/GPU -> 实测/模型 = 1.000
+########## reduce ##########
+=== reduce（归约到一卡） ===
+[语义] PASS: dst=0 得到 Σ_r 输入_r = [36,72,108,144]
+[规模] 每 rank 输入 128 MiB, 归约到 dst=0; 迭代 20 次
+[耗时] 每次 0.236 ms | algbw 568 GB/s | busbw(环形口径) 497 GB/s
+[流量] NVLink 实测: 每 GPU 平均 0.1094 GiB/次 (min 0.0000 / max 0.1250)
+[对账] 环形模型 0.1094 GiB/次/GPU -> 实测/模型 = 1.000
+########## all_reduce ##########
+=== all_reduce（全归约） ===
+[语义] PASS: 每个 rank 均得到 [36,72,108,144]
+[规模] 每 rank 输入 128 MiB; 迭代 20 次
+[耗时] 每次 0.401 ms | algbw 334 GB/s | busbw(环形口径) 585 GB/s
+[流量] NVLink 实测: 每 GPU 平均 0.1409 GiB/次 (min 0.1402 / max 0.1410)
+[对账] 环形模型 0.2188 GiB/次/GPU -> 实测/模型 = 0.644
+########## all_gather ##########
+=== all_gather（全收集） ===
+[语义] PASS: 每 rank 拼出 [1,1,1,1,2,2,2,2,...,8,8,8,8]
+[规模] 每 rank 输入块 16 MiB, 输出 128 MiB; 迭代 20 次
+[耗时] 每次 0.289 ms | algbw 465 GB/s | busbw(环形口径) 407 GB/s
+[流量] NVLink 实测: 每 GPU 平均 0.1094 GiB/次 (min 0.1094 / max 0.1094)
+[对账] 环形模型 0.1094 GiB/次/GPU -> 实测/模型 = 1.000
+########## reduce_scatter ##########
+=== reduce_scatter（归约散射） ===
+[语义] PASS: rank r 得到自己段的和 8x(r+1)
+[规模] 每 rank 输入 128 MiB, 输出 16 MiB; 迭代 20 次
+[耗时] 每次 0.216 ms | algbw 620 GB/s | busbw(环形口径) 542 GB/s
+[流量] NVLink 实测: 每 GPU 平均 0.1094 GiB/次 (min 0.1094 / max 0.1094)
+[对账] 环形模型 0.1094 GiB/次/GPU -> 实测/模型 = 1.000
+########## all_to_all ##########
+=== all_to_all（全交换） ===
+[语义] PASS: 转置语义: out 第 j 段 = rank j 的第 r 段
+[规模] 每 rank 128 MiB 等分发给 8 卡; 迭代 20 次
+[耗时] 每次 0.245 ms | algbw 548 GB/s | busbw(环形口径) 479 GB/s
+[流量] NVLink 实测: 每 GPU 平均 0.1094 GiB/次 (min 0.1094 / max 0.1094)
+[对账] 环形模型 0.1094 GiB/次/GPU -> 实测/模型 = 1.000
+########## rs_ag ##########
+=== reduce_scatter + all_gather（= all_reduce） ===
+[语义] PASS: RS+AG 后每 rank 拼回全部段的和(= all_reduce 语义)
+[规模] 输入 128 MiB -> RS 出 16 MiB -> AG 拼回 128 MiB; 迭代 20 次
+[耗时] 每次 0.499 ms | algbw 269 GB/s | busbw(环形口径) 471 GB/s
+[流量] NVLink 实测: 每 GPU 平均 0.2188 GiB/次 (min 0.2188 / max 0.2188)
+[对账] 环形模型 0.2188 GiB/次/GPU -> 实测/模型 = 1.000
+
+### broadcast 重跑（16 GiB x 5 次，2026-10-17，共识后规模）
+=== broadcast（广播） ===
+[语义] PASS: 8 个 rank 全部得到 src=0 的 [1,2,3,4]
+[规模] src(rank0) 持有 16384 MiB (16 GiB), 广播到 8 卡; 迭代 5 次
+[耗时] 每次 25.234 ms | algbw 681 GB/s | busbw(环形口径) 596 GB/s
+[流量] NVLink 实测: 每 GPU 平均 14.0017 GiB/次 (min 0.0010 / max 16.0020)
+[对账] 环形模型 14.0000 GiB/次/GPU -> 实测/模型 = 1.000
+
+### broadcast 重跑（16 GB 十进制 x 5 次，2026-10-17，单位共识后）
+=== broadcast（广播） ===
+[语义] PASS: 8 个 rank 全部得到 src=0 的 [1,2,3,4]
+[规模] src(rank0) 持有 16 GB, 广播到 8 卡; 迭代 5 次
+[耗时] 每次 23.542 ms | algbw 680 GB/s | busbw(环形口径) 595 GB/s
+[流量] NVLink 实测: 每 GPU 平均 14.0017 GB/次 (min 0.0010 / max 16.0020)
+[对账] 环形模型 14.0000 GB/次/GPU -> 实测/模型 = 1.000
+
+### broadcast 通道数扫描（NCCL_MAX_NCHANNELS, 16 GB x 5 次, 2026-10-17）
+# 默认(32 通道): 23.528 ms | algbw 680 GB/s | busbw 595 GB/s; 流量 14.0017 GB/次 (min 0.0010 / max 16.0020), 模型 1.000
+# MAX=1:  624.438 ms | 26 GB/s | 22 GB/s; 流量完全不变 14.0017 GB (min 0.0010 / max 16.0020), 模型 1.000
+# MAX=2:  312.803 ms | 51 GB/s | 45 GB/s
+# MAX=4:  156.810 ms | 102 GB/s | 89 GB/s
+# MAX=8:  78.723 ms | 203 GB/s | 178 GB/s
+# MAX=16: 40.281 ms | 397 GB/s | 348 GB/s
+# 结论: 每通道约 26 GB/s 线性扩展; 通道只改并发度, 不改算法形状与字节
+
+### broadcast Trees 日志逐通道核验（NCCL_DEBUG_FILE 逐进程, 2026-10-17）
+rank : 通道数 / 唯一树结构数 / 树结构
+  0  : 32 / 1 / ["1/-1/-1->0->-1"]
+  1  : 32 / 1 / ["2/-1/-1->1->0"]
+  2  : 32 / 1 / ["3/-1/-1->2->1"]
+  3  : 32 / 1 / ["4/-1/-1->3->2"]
+  4  : 32 / 1 / ["5/-1/-1->4->3"]
+  5  : 32 / 1 / ["6/-1/-1->5->4"]
+  6  : 32 / 1 / ["7/-1/-1->6->5"]
+  7  : 32 / 1 / ["-1/-1/-1->7->6"]
+# 结论: 32 通道完全同构, 线性链 0-1-2-...-7; 对 src=0 广播数据沿 0->1->...->7, GPU7 为不发送的链尾(与字节实测 min=0 吻合)
+
+### broadcast 单次 vs 连发核验（iters=1 独立 x5, 16 GiB, 2026-10-17）
+ms": 25.197 tx_gib_per_gpu": 14.0017 tx_gib_min": 0.001 tx_gib_max": 16.002
+ms": 25.136 tx_gib_per_gpu": 14.0017 tx_gib_min": 0.001 tx_gib_max": 16.002
+ms": 25.153 tx_gib_per_gpu": 14.0017 tx_gib_min": 0.001 tx_gib_max": 16.002
+ms": 25.063 tx_gib_per_gpu": 14.0017 tx_gib_min": 0.001 tx_gib_max": 16.002
+ms": 25.158 tx_gib_per_gpu": 14.0017 tx_gib_min": 0.001 tx_gib_max": 16.002
+# 结论: 单次字节与 5 连发平均值逐位一致(路径恒定); 孤立单次 25.1ms vs 连发 23.5ms(稳态流水, ~7% 乐观)
