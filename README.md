@@ -20,37 +20,46 @@ Empirical study of NCCL 2.29.7 collective communication algorithms on B300 GPUs 
 nccl/
 ├── README.md                          ← this file
 ├── LICENSE
-├── basic-test-en.md                   ← English: environment baseline (dual-plane, connectivity)
-├── nccl-sn-en.md                      ← English: single-node (8 GPU, NVLink)
-├── nccl-2n-en.md                      ← English: 2-node (16 GPU, NVLink + RoCE)
-├── nccl-4n-en.md                      ← English: 4-node (32 GPU, NVLink + RoCE)
+├── basic-test-en.md                   ← English: environment baseline
+├── nccl-sn-en.md                      ← English: single-node (8 GPU)
+├── nccl-2n-en.md                      ← English: 2-node (16 GPU)
+├── nccl-4n-en.md                      ← English: 4-node (32 GPU)
 ├── nccl-sn/                           ← Chinese: single-node
-│   ├── nccl-sn.md                     ← main document (637 lines)
-│   ├── sn-codes/                      ← one standalone .py per operation
-│   │   ├── broadcast.py, reduce.py, all_gather.py, reduce_scatter.py
-│   │   ├── all_reduce.py, rs_ag.py, all_to_all.py, a2a_sparse.py
-│   ├── scan_channels.sh               ← channel count sweep (1→32)
-│   ├── nccl_bench.py                  ← single-run verification utility
-│   └── sn-results/                    ← raw measurement data
+│   ├── nccl-sn.md                     ← main document
+│   ├── sn-codes/                      ← per-op standalone scripts
+│   ├── scan_channels.sh               ← channel sweep (1→32)
+│   ├── nccl_bench.py                  ← single-run verification
+│   └── sn-results/                    ← raw data
 └── nccl-mn/                           ← Chinese: multi-node
-    ├── basic-test.md                  ← environment baseline (dual-plane, 8×8 connectivity)
-    ├── nccl-2n.md                     ← 2-node main document (712 lines)
-    ├── nccl-4n.md                     ← 4-node main document (344 lines)
-    ├── bench.py                       ← W-adaptive benchmark (7 ops, dual counters)
+    ├── basic-test.md                  ← environment baseline
+    ├── nccl-2n.md                     ← 2-node main document
+    ├── nccl-4n.md                     ← 4-node main document
+    ├── bench.py                       ← W-adaptive benchmark
     ├── run.sh                         ← multi-node launcher
-    ├── env_inventory.sh               ← environment inventory script
-    ├── 8-gpu-8-fabric-pod.yaml        ← Kubernetes StatefulSet (4 Pods × 8 GPU × 8 RoCE)
-    └── mn-results-2n-16gb.txt         ← raw 2-node measurement data
+    ├── env_inventory.sh               ← environment inventory
+    ├── 8-gpu-8-fabric-pod.yaml        ← K8s StatefulSet
+    └── mn-results-2n-16gb.txt         ← raw 2-node data
 ```
 
 ## Documents (read in order)
 
-| # | Document | Content |
+Each document exists in **Chinese** (original) and **English** (translation), linked below:
+
+| # | Topic | English | 中文 |
+|---|---|---|---|
+| 1 | Environment baseline | [basic-test-en.md](basic-test-en.md) | [basic-test.md](nccl-mn/basic-test.md) |
+| 2 | Single-node (8 GPU) | [nccl-sn-en.md](nccl-sn-en.md) | [nccl-sn.md](nccl-sn/nccl-sn.md) |
+| 3 | 2-node (16 GPU) | [nccl-2n-en.md](nccl-2n-en.md) | [nccl-2n.md](nccl-mn/nccl-2n.md) |
+| 4 | 4-node (32 GPU) | [nccl-4n-en.md](nccl-4n-en.md) | [nccl-4n.md](nccl-mn/nccl-4n.md) |
+
+Content per document:
+
+| # | Topic | Content |
 |---|---|---|
-| 1 | `basic-test` | Environment: dual-plane architecture (16 NICs/node, 8/Pod), GPU↔rail affinity, 256/256 cross-rail connectivity |
-| 2 | `nccl-sn` | Single-node: 7 ops byte models, algorithm fingerprints (Ring/NVLS/P2P), channel scans, NVLS topic |
-| 3 | `nccl-2n` | 2-node: ring-family commonality (8 ring orders, dead-edge rules), CROSS_NIC tuning (+15%), NVLS × RoCE architecture |
-| 4 | `nccl-4n` | 4-node: five-segment ring orders, NVLS 2→4 boundary (all-or-nothing + SPCX tuner), 2→4 node scaling |
+| 1 | Environment | Dual-plane architecture (16 NICs/node, 8/Pod), GPU↔rail affinity, 256/256 cross-rail connectivity |
+| 2 | Single-node | 7 ops byte models, algorithm fingerprints (Ring/NVLS/P2P), channel scans, NVLS topic |
+| 3 | 2-node | Ring-family commonality (8 ring orders, dead-edge rules), CROSS_NIC tuning (+15%), NVLS × RoCE architecture |
+| 4 | 4-node | Five-segment ring orders, NVLS 2→4 boundary (all-or-nothing + SPCX tuner), 2→4 node scaling |
 
 Each document has: table of contents, key-findings table, per-operation sections with strict definition → principle → analogy → code → measured results → five-step analysis (bytes → algorithm → structure → cross-node flow → performance), unverified items, and reproduction guide.
 
