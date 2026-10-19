@@ -1,0 +1,41 @@
+########## broadcast ##########
+=== logs: /tmp/mn/broadcast-1792293532-node*.log ===
+RESULT {"node": 0, "op": "broadcast", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 50.61, "algbw": 316.0, "busbw_ring": 296.0, "nv_gb": [14.001, 8.001, 14.002, 14.002, 14.002, 14.002, 14.002, 6.001], "rdma_gb": [2.04, 2.042, 2.042, 2.042, 2.042, 2.042, 2.042, 2.042], "nv_total": 98.01, "rdma_total": 16.33, "wire_per_gpu": 14.293, "model_per_gpu": 15.0, "ratio": 0.953}
+RESULT {"node": 1, "op": "broadcast", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 50.743, "algbw": 315.0, "busbw_ring": 296.0, "nv_gb": [14.002, 14.002, 14.002, 14.002, 14.002, 14.002, 14.002, 14.002], "rdma_gb": [0.003, 2.042, 2.042, 2.042, 2.042, 2.042, 2.042, 2.042], "nv_total": 112.01, "rdma_total": 14.3, "wire_per_gpu": 15.789, "model_per_gpu": 15.0, "ratio": 1.053}
+########## reduce ##########
+=== logs: /tmp/mn/reduce-1792293563-node*.log ===
+RESULT {"node": 0, "op": "reduce", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 49.493, "algbw": 323.0, "busbw_ring": 303.0, "nv_gb": [0.001, 14.001, 14.002, 14.002, 14.002, 14.002, 14.002, 14.001], "rdma_gb": [2.042, 0.003, 2.042, 2.042, 2.042, 2.042, 2.042, 2.041], "nv_total": 98.01, "rdma_total": 14.3, "wire_per_gpu": 14.038, "model_per_gpu": 15.0, "ratio": 0.936}
+RESULT {"node": 1, "op": "reduce", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 49.417, "algbw": 324.0, "busbw_ring": 304.0, "nv_gb": [14.002, 14.002, 14.002, 14.002, 14.002, 14.002, 14.002, 14.002], "rdma_gb": [2.042, 2.04, 2.042, 2.042, 2.042, 2.042, 2.042, 2.041], "nv_total": 112.01, "rdma_total": 16.33, "wire_per_gpu": 16.043, "model_per_gpu": 15.0, "ratio": 1.07}
+########## all_reduce ##########
+=== logs: /tmp/mn/all_reduce-1792293595-node*.log ===
+RESULT {"node": 0, "op": "all_reduce", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 41.657, "algbw": 384.0, "busbw_ring": 720.0, "nv_gb": [18.007, 18.007, 18.007, 18.007, 18.007, 18.007, 18.007, 18.007], "rdma_gb": [2.044, 2.044, 2.044, 2.044, 2.044, 2.044, 2.044, 2.044], "nv_total": 144.06, "rdma_total": 16.35, "wire_per_gpu": 20.051, "model_per_gpu": 30.0, "ratio": 0.668}
+RESULT {"node": 1, "op": "all_reduce", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 41.655, "algbw": 384.0, "busbw_ring": 720.0, "nv_gb": [18.004, 18.004, 18.004, 18.004, 18.004, 18.004, 18.004, 18.004], "rdma_gb": [2.044, 2.044, 2.044, 2.044, 2.044, 2.044, 2.044, 2.044], "nv_total": 144.03, "rdma_total": 16.35, "wire_per_gpu": 20.048, "model_per_gpu": 30.0, "ratio": 0.668}
+########## all_gather ##########
+=== logs: /tmp/mn/all_gather-1792293628-node*.log ===
+RESULT {"node": 0, "op": "all_gather", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 97.338, "algbw": 329.0, "busbw_ring": 308.0, "nv_gb": [26.252, 26.252, 26.252, 26.252, 26.252, 26.252, 26.252, 26.252], "rdma_gb": [3.827, 3.827, 3.827, 3.827, 3.827, 3.827, 3.827, 3.826], "nv_total": 210.01, "rdma_total": 30.61, "wire_per_gpu": 30.078, "model_per_gpu": 30.0, "ratio": 1.003}
+RESULT {"node": 1, "op": "all_gather", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 97.34, "algbw": 329.0, "busbw_ring": 308.0, "nv_gb": [26.252, 26.252, 26.252, 26.252, 26.252, 26.252, 26.252, 26.252], "rdma_gb": [3.827, 3.827, 3.827, 3.827, 3.827, 3.827, 3.827, 3.827], "nv_total": 210.01, "rdma_total": 30.62, "wire_per_gpu": 30.079, "model_per_gpu": 30.0, "ratio": 1.003}
+########## reduce_scatter ##########
+=== logs: /tmp/mn/reduce_scatter-1792293661-node*.log ===
+RESULT {"node": 0, "op": "reduce_scatter", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 44.347, "algbw": 361.0, "busbw_ring": 338.0, "nv_gb": [13.126, 13.126, 13.126, 13.126, 13.126, 13.126, 13.126, 13.126], "rdma_gb": [1.913, 1.913, 1.913, 1.913, 1.913, 1.913, 1.913, 1.913], "nv_total": 105.01, "rdma_total": 15.3, "wire_per_gpu": 15.039, "model_per_gpu": 15.0, "ratio": 1.003}
+RESULT {"node": 1, "op": "reduce_scatter", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 44.362, "algbw": 361.0, "busbw_ring": 338.0, "nv_gb": [13.126, 13.126, 13.126, 13.126, 13.126, 13.126, 13.126, 13.126], "rdma_gb": [1.913, 1.913, 1.913, 1.913, 1.913, 1.913, 1.913, 1.913], "nv_total": 105.01, "rdma_total": 15.31, "wire_per_gpu": 15.039, "model_per_gpu": 15.0, "ratio": 1.003}
+########## all_to_all ##########
+=== logs: /tmp/mn/all_to_all-1792293692-node*.log ===
+RESULT {"node": 0, "op": "all_to_all", "W": 16, "gb": 16, "iters": 5, "chk": "FAIL(0/16)", "ms": 166.169, "algbw": 96.0, "busbw_ring": 90.0, "nv_gb": [7.003, 7.003, 7.003, 7.003, 7.003, 7.003, 7.003, 7.003], "rdma_gb": [8.179, 8.179, 8.179, 8.179, 8.179, 8.179, 8.179, 8.179], "nv_total": 56.03, "rdma_total": 65.43, "wire_per_gpu": 15.182, "model_per_gpu": 15.0, "ratio": 1.012}
+RESULT {"node": 1, "op": "all_to_all", "W": 16, "gb": 16, "iters": 5, "chk": "FAIL(0/16)", "ms": 166.161, "algbw": 96.0, "busbw_ring": 90.0, "nv_gb": [7.003, 7.003, 7.003, 7.003, 7.003, 7.003, 7.003, 7.003], "rdma_gb": [8.179, 8.179, 8.179, 8.179, 8.179, 8.179, 8.179, 8.179], "nv_total": 56.03, "rdma_total": 65.43, "wire_per_gpu": 15.182, "model_per_gpu": 15.0, "ratio": 1.012}
+########## rs_ag ##########
+=== logs: /tmp/mn/rs_ag-1792293728-node*.log ===
+RESULT {"node": 0, "op": "rs_ag", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 92.899, "algbw": 172.0, "busbw_ring": 323.0, "nv_gb": [26.252, 26.252, 26.252, 26.252, 26.252, 26.252, 26.252, 26.252], "rdma_gb": [3.827, 3.827, 3.827, 3.827, 3.826, 3.826, 3.826, 3.826], "nv_total": 210.01, "rdma_total": 30.61, "wire_per_gpu": 30.078, "model_per_gpu": 30.0, "ratio": 1.003}
+RESULT {"node": 1, "op": "rs_ag", "W": 16, "gb": 16, "iters": 5, "chk": "PASS", "ms": 92.893, "algbw": 172.0, "busbw_ring": 323.0, "nv_gb": [26.252, 26.252, 26.252, 26.252, 26.252, 26.252, 26.252, 26.252], "rdma_gb": [3.827, 3.827, 3.827, 3.827, 3.827, 3.827, 3.827, 3.826], "nv_total": 210.01, "rdma_total": 30.61, "wire_per_gpu": 30.078, "model_per_gpu": 30.0, "ratio": 1.003}
+
+[exited with code 0]
+
+### all_to_all 重跑（语义检查 bug 修复后）
+RESULT node0: 170.009ms chk=PASS nv=7.003/GPU rdma=8.179/rail wire=15.182 model=15.0 ratio=1.012
+RESULT node1: 169.897ms chk=PASS nv=7.003/GPU rdma=8.179/rail wire=15.182 model=15.0 ratio=1.012
+
+### NCCL_DEBUG 证据（all_reduce, 2 节点）
+# NET/IB : Using [0]mlx5_0...[7]mlx5_14 [RO]; OOB eth0  —— [RO] = rail-optimized（NCCL 自检测）
+# NVLS comm ×8（每节点内 NVLS 子通信器，nvlsRanks 8）
+# Trees 跨节点: rank 7 ↔ 15（rail 配对）; "NVLS Head 7: 7 15"
+# 通道: 32 通道（Channel 31/0），环形序按通道轮转（跨界 duty 分散到全部 rail）
+# 传输: 节点内 via P2P/CUMEM（NVLink），跨节点 via NET/IB/x/GDRDMA（RoCE + GPUDirect）
